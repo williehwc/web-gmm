@@ -18,3 +18,6 @@ class Model:
   def score_testing_vectors(self, vectors):
     scores = self.gmm.score_samples(vectors)
     return numpy.mean(scores)
+  
+  def get_num_components(self):
+    return self.gmm.n_components

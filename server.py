@@ -2,9 +2,6 @@ from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 from Model import Model
 
-MAX_NUM_TRAINING_VECTORS = 600
-NUM_COMPONENTS = 8
-
 app = Flask(__name__)
 api = Api(app)
 
@@ -12,7 +9,15 @@ gmms = []
 
 class NewModel(Resource):
   def post(self):
-    new_gmm = Model(MAX_NUM_TRAINING_VECTORS, NUM_COMPONENTS)
+    # Validation
+    parser = reqparse.RequestParser()
+    parser.add_argument('maxNumTrainingVectors', type=int, location='json', required=True)
+    parser.add_argument('numComponents', type=int, location='json', required=True)
+    parser.parse_args()
+    # Get data
+    data = request.get_json()
+    # Make new model
+    new_gmm = Model(data['maxNumTrainingVectors'], data['numComponents'])
     gmms.append(new_gmm)
     return {'id': len(gmms) - 1}
 
@@ -26,7 +31,7 @@ class ExistingModel(Resource):
     # Get data
     data = request.get_json()
     vectors = data['vectors']
-    if data['train'] and len(vectors) >= NUM_COMPONENTS:
+    if data['train'] and len(vectors) >= gmms[model_id].get_num_components():
       # Add vectors and train the model
       gmms[model_id].add_training_vectors(vectors)
       gmms[model_id].train()
